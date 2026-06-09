@@ -1,14 +1,14 @@
 {
     "name": "GTI611 CloudSim",
-    "image": "mcr.microsoft.com/devcontainers/java:1-11-bullseye",
+    "image": "mcr.microsoft.com/devcontainers/java:1-8-bullseye",
     "features": {
         "ghcr.io/devcontainers/features/java:1": {
-            "version": "11",
+            "version": "21",
             "installMaven": true
-        }
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {}
     },
-    "postCreateCommand": "git clone --depth=1 https://github.com/Cloudslab/cloudsim.git /workspaces/GTI611-CloudSim/cloudsim && cd /workspaces/GTI611-CloudSim/cloudsim && mvn install -DskipTests -q",
-    "customizations": {
+    "postCreateCommand": "git clone --depth=1 --branch cloudsim-3.0.3 https://github.com/Cloudslab/cloudsim.git /workspaces/GTI611-CloudSim/cloudsim && cd /workspaces/GTI611-CloudSim/cloudsim && mvn install -DskipTests -q""customizations": {
         "vscode": {
             "extensions": [
                 "vscjava.vscode-java-pack",
