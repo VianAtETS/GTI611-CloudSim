@@ -7,5 +7,15 @@
     "files.trimTrailingWhitespace": true,
     "[yaml]": {
         "editor.tabSize": 2
-    }
+    },
+    "java.project.resourceFilters": [
+        "node_modules",
+        ".git",
+        "workload"
+    ],
+    "files.exclude": {
+        "**/cloudsim/modules/cloudsim-examples/src/main/resources/workload": true
+    },
+    "git.ignoreLimitWarning": true,
+    "java.server.launchMode": "LightWeight"
 }
