@@ -1,5 +1,9 @@
+# Other repo(s)
+cloudsim/
+
 # Environments
 .env
+.devcontainer/devcontainer-lock.json
 
 # Super-linter outputs
 super-linter-output

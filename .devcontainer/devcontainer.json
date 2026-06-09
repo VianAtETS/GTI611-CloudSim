@@ -1,18 +1,19 @@
 {
-    "name": "Template Development Container",
-    "image": "mcr.microsoft.com/devcontainers/base:bookworm",
-    "customizations": {
-        "settings": {
-            "terminal.integrated.shell.linux": "/bin/bash"
-        },
-        "vscode": {
-            "extensions": [
-                "ms-vscode.atom-keybindings",
-                "ms-vscode-remote.remote-containers",
-                "ms-azuretools.vscode-docker",
-                "myriad-dreamin.tinymist"
-            ]
+    "name": "GTI611 CloudSim",
+    "image": "mcr.microsoft.com/devcontainers/java:1-11-bullseye",
+    "features": {
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "11",
+            "installMaven": true
         }
     },
-    "remoteUser": "vscode"
+    "postCreateCommand": "git clone --depth=1 https://github.com/Cloudslab/cloudsim.git /workspaces/GTI611-CloudSim/cloudsim && cd /workspaces/GTI611-CloudSim/cloudsim && mvn install -DskipTests -q",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "vscjava.vscode-maven"
+            ]
+        }
+    }
 }
