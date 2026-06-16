@@ -1,5 +1,10 @@
 # Other repo(s)
-cloudsim/
+cloudsim/**/target/
+cloudsim/**/out/
+cloudsim/**/build/
+cloudsim/**/dist/
+cloudsim/**/bin/
+logs/
 
 # Environments
 .env
