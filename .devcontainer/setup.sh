@@ -14,6 +14,9 @@ printf -- "-DskipTests\n-Dmaven.javadoc.skip=true\n" \
 
 echo "==> Building CloudSim..."
 cd "$WORKSPACE/cloudsim"
-mvn install -q
+mvn install -q -pl '!distribution'
+
+echo "==> Removing CloudSim git history..."
+rm -rf "$WORKSPACE/cloudsim/.git"
 
 echo "==> Done."
