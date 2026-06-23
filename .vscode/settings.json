@@ -13,9 +13,21 @@
         ".git",
         "workload"
     ],
-    "files.exclude": {
-        "**/cloudsim/modules/cloudsim-examples/src/main/resources/workload": true
-    },
     "git.ignoreLimitWarning": true,
-    "java.server.launchMode": "LightWeight"
+    "java.server.launchMode": "LightWeight",
+    "files.watcherExclude": {
+        "**/target/**": true,
+        "**/build/**": true,
+        "**/out/**": true
+    },
+    "search.exclude": {
+        "**/target/**": true,
+        "**/build/**": true,
+        "**/out/**": true
+    },
+    "files.exclude": {
+        "**/target": true,
+        "**/build": true,
+        "**/out": true
+    }
 }
