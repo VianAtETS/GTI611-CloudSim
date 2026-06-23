@@ -8,6 +8,7 @@
         },
         "ghcr.io/devcontainers/features/github-cli:1": {}
     },
+    "onCreateCommand": "git submodule update --init --depth 1",
     "postCreateCommand": "bash .devcontainer/setup.sh",
     "customizations": {
         "vscode": {

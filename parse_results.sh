@@ -1,36 +1,52 @@
 #!/bin/bash
-# Extracts Part 3 metrics from all algorithm logs and prints a CSV.
+# Extracts Partie 3 metrics from the algorithm logs and prints a CSV to stdout.
+#
+# Column order matches the Typst template (resultats_partie3.csv):
+#   0  alg
+#   1  energy        (kWh)
+#   2  migrations
+#   3  sla           (%)
+#   4  sla_host      (%)  -- SLA time per active host
+#   5  sla_avg       (%)  -- Average SLA violation
+#   6  shutdowns
+#   7  mig_time      (s)  -- Mean time before a VM migration
+#   8  sel_vm        (s)  -- Execution time - VM selection mean
+#   9  sel_vm_sd     (s)
+#   10 sel_host      (s)  -- Execution time - host selection mean
+#   11 sel_host_sd   (s)
+#   12 realloc       (s)  -- Execution time - VM reallocation mean
+#   13 realloc_sd    (s)
+#
+# Usage: ./parse_results.sh > resultats_partie3.csv
 
 LOGS="/workspaces/GTI611-CloudSim/logs"
-
 ALGORITHMS="ThrMmt ThrMu ThrRs MadMmt MadMu MadRs IqrMmt IqrMu IqrRs"
 
-extract() {
-    grep -oP "(?<=${1}: ).*" "$2" | head -1 | tr -d ' '
-}
+# field <regex-after-label> <logfile> : grabs the first number following a label.
+num() { grep -oP "$1" "$2" 2>/dev/null | head -1; }
 
-echo "Algorithme,Energie (kWh),VMs migrées,SLA (%),SLA time/host actif (%),SLA violation moy (%),Hosts shutdown,Temps moy avant migration VM (s),Temps moy selection VM (s),stDev selection VM (s),Temps moy selection host (s),stDev selection host (s),Temps moy reallocation VM (s),stDev reallocation VM (s)"
+echo "alg,energy,migrations,sla,sla_host,sla_avg,shutdowns,mig_time,sel_vm,sel_vm_sd,sel_host,sel_host_sd,realloc,realloc_sd"
 
 for alg in $ALGORITHMS; do
     log="$LOGS/${alg}.log"
     if [[ ! -f "$log" ]]; then
-        echo "$alg,N/A"
+        echo "$alg,,,,,,,,,,,,,"
         continue
     fi
 
-    energy=$(grep    "Energy consumption"          "$log" | grep -oP '[\d.]+(?= kWh)')
-    migrations=$(grep "Number of VM migrations"    "$log" | grep -oP '\d+$')
-    sla=$(grep        "^SLA:"                      "$log" | grep -oP '[\d.]+(?=%)')
-    sla_host=$(grep   "SLA time per active host"   "$log" | grep -oP '[\d.]+(?=%)')
-    sla_avg=$(grep    "Average SLA violation"      "$log" | grep -oP '[\d.]+(?=%)')
-    shutdowns=$(grep  "Number of host shutdowns"   "$log" | grep -oP '\d+$')
-    mig_time=$(grep   "Mean time before a VM mig"  "$log" | grep -oP '[\d.]+' | head -1)
-    sel_vm=$(grep     "VM selection mean"          "$log" | grep -oP '[\d.]+' | head -1)
-    sel_vm_sd=$(grep  "VM selection stDev"         "$log" | grep -oP '[\d.]+' | head -1)
-    sel_host=$(grep   "host selection mean"        "$log" | grep -oP '[\d.]+' | head -1)
-    sel_host_sd=$(grep "host selection stDev"      "$log" | grep -oP '[\d.]+' | head -1)
-    realloc=$(grep    "VM reallocation mean"       "$log" | grep -oP '[\d.]+' | head -1)
-    realloc_sd=$(grep "VM reallocation stDev"      "$log" | grep -oP '[\d.]+' | head -1)
+    energy=$(     num '(?<=Energy consumption: )[\d.]+'            "$log")
+    migrations=$( num '(?<=Number of VM migrations: )\d+'         "$log")
+    sla=$(        num '(?<=^SLA: )[\d.]+'                          "$log")
+    sla_host=$(   num '(?<=SLA time per active host: )[\d.]+'     "$log")
+    sla_avg=$(    num '(?<=Average SLA violation: )[\d.]+'        "$log")
+    shutdowns=$(  num '(?<=Number of host shutdowns: )\d+'       "$log")
+    mig_time=$(   num '(?<=Mean time before a VM migration: )[\d.]+' "$log")
+    sel_vm=$(     num '(?<=VM selection mean: )[\d.]+'           "$log")
+    sel_vm_sd=$(  num '(?<=VM selection stDev: )[\d.]+'          "$log")
+    sel_host=$(   num '(?<=host selection mean: )[\d.]+'         "$log")
+    sel_host_sd=$(num '(?<=host selection stDev: )[\d.]+'        "$log")
+    realloc=$(    num '(?<=VM reallocation mean: )[\d.]+'        "$log")
+    realloc_sd=$( num '(?<=VM reallocation stDev: )[\d.]+'       "$log")
 
     echo "$alg,$energy,$migrations,$sla,$sla_host,$sla_avg,$shutdowns,$mig_time,$sel_vm,$sel_vm_sd,$sel_host,$sel_host_sd,$realloc,$realloc_sd"
 done
