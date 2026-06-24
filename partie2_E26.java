@@ -30,25 +30,26 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
 /**
- * Laboratoire 2 - Partie 2 : ordonnancement TS (Time-Shared) et SS (Space-Shared).
+ * Laboratoire 2 - Partie 2 : ordonnancement TS (Time-Shared) et SS
+ * (Space-Shared).
  *
  * Scenario 1 (enonce) :
- *   - 1 centre de donnees, 1 broker.
- *   - 4 hotes, chacun 3 coeurs CPU de 1500 MIPS.
- *   - 6 VMs, chacune 2 coeurs CPU de 500 MIPS.
- *   - 20 cloudlets, chacune 3000 MI, 1 coeur, UtilizationModelFull.
+ * - 1 centre de donnees, 1 broker.
+ * - 4 hotes, chacun 3 coeurs CPU de 1500 MIPS.
+ * - 6 VMs, chacune 2 coeurs CPU de 500 MIPS.
+ * - 20 cloudlets, chacune 3000 MI, 1 coeur, UtilizationModelFull.
  *
  * Deux niveaux d'ordonnancement, chacun SS ou TS, d'ou 4 scenarios :
- *   Scenario | VM-sur-hote (VmScheduler) | Cloudlet-sur-VM (CloudletScheduler)
- *   ---------+---------------------------+------------------------------------
- *      1     | Space-Shared              | Space-Shared
- *      2     | Space-Shared              | Time-Shared
- *      3     | Time-Shared               | Space-Shared
- *      4     | Time-Shared               | Time-Shared
+ * Scenario | VM-sur-hote (VmScheduler) | Cloudlet-sur-VM (CloudletScheduler)
+ * ---------+---------------------------+------------------------------------
+ * 1 | Space-Shared | Space-Shared
+ * 2 | Space-Shared | Time-Shared
+ * 3 | Time-Shared | Space-Shared
+ * 4 | Time-Shared | Time-Shared
  *
  * Usage : passer le numero de scenario en argument (1..4). Defaut : 1.
- *   ./run.sh partie2_E26            -> scenario 1
- *   ./run.sh "partie2_E26 2"        -> scenario 2  (selon le wrapper run.sh)
+ * ./run.sh partie2_E26 -> scenario 1
+ * ./run.sh "partie2_E26 2" -> scenario 2 (selon le wrapper run.sh)
  * Ou en specifiant la classe + arg via exec:java -Dexec.args="2".
  */
 public class partie2_E26 {
@@ -109,11 +110,18 @@ public class partie2_E26 {
 
             // Etape 6 : simulation.
             CloudSim.startSimulation();
+
+            // Le placement VM->hote doit etre lu AVANT stopSimulation() :
+            // apres l'arret, les VMs sont desallouees et getHost() renvoie null.
+            // getVmsCreatedList() ne contient que les VMs reellement placees,
+            // ce qui rend visible le cas SS ou seules 4 des 6 VMs tiennent.
+            List<Vm> createdVms = broker.getVmsCreatedList();
+            printVmAllocation(datacenter0, createdVms, vmlist.size());
+
             List<Cloudlet> receivedList = broker.getCloudletReceivedList();
             CloudSim.stopSimulation();
 
             // Resultats.
-            printVmAllocation(datacenter0, vmlist);
             Log.print("=============> User " + brokerId + "    ");
             printCloudletList(receivedList);
 
@@ -125,8 +133,10 @@ public class partie2_E26 {
     }
 
     /**
-     * @param vmSchedTimeShared true => VmSchedulerTimeShared, false => VmSchedulerSpaceShared.
-     *        Controle l'ordonnancement des VMs au niveau de l'hote.
+     * @param vmSchedTimeShared true => VmSchedulerTimeShared, false =>
+     *                          VmSchedulerSpaceShared.
+     *                          Controle l'ordonnancement des VMs au niveau de
+     *                          l'hote.
      */
     private static Datacenter createDatacenter(String name, boolean vmSchedTimeShared) {
         List<Host> hostList = new ArrayList<Host>();
@@ -193,8 +203,9 @@ public class partie2_E26 {
 
     /**
      * @param cloudletSchedTimeShared true => CloudletSchedulerTimeShared,
-     *        false => CloudletSchedulerSpaceShared. Controle l'ordonnancement
-     *        des cloudlets au niveau de la VM.
+     *                                false => CloudletSchedulerSpaceShared.
+     *                                Controle l'ordonnancement
+     *                                des cloudlets au niveau de la VM.
      */
     private static List<Vm> createVM(int userId, int vms, boolean cloudletSchedTimeShared) {
         LinkedList<Vm> list = new LinkedList<Vm>();
@@ -233,19 +244,36 @@ public class partie2_E26 {
     }
 
     /**
-     * Affiche, pour chaque VM, l'hote qui l'heberge (question 3a de l'enonce).
-     * getHost() peut renvoyer null si la VM n'a pas pu etre placee.
+     * Affiche, pour chaque VM reellement placee, l'hote qui l'heberge
+     * (question 3a). En mode VmSchedulerSpaceShared, certaines VMs peuvent ne
+     * pas etre placees faute de coeurs libres : on les liste explicitement.
+     *
+     * @param createdVms     VMs effectivement creees/placees
+     *                       (broker.getVmsCreatedList()).
+     * @param requestedCount nombre total de VMs demandees, pour signaler les
+     *                       manquantes.
      */
-    private static void printVmAllocation(Datacenter datacenter, List<Vm> vms) {
+    private static void printVmAllocation(Datacenter datacenter, List<Vm> createdVms, int requestedCount) {
         String indent = "    ";
         Log.printLine();
         Log.printLine("========== PLACEMENT DES VMs ==========");
+        Log.printLine("VMs demandees : " + requestedCount
+                + " -- VMs placees : " + createdVms.size());
         Log.printLine("VM ID" + indent + "Host ID" + indent + "Datacenter ID");
-        for (Vm vm : vms) {
+
+        java.util.Set<Integer> placedIds = new java.util.HashSet<Integer>();
+        for (Vm vm : createdVms) {
+            placedIds.add(vm.getId());
             Host host = vm.getHost();
-            String hostId = (host == null) ? "NON PLACEE" : String.valueOf(host.getId());
+            String hostId = (host == null) ? "?" : String.valueOf(host.getId());
             Log.printLine(indent + vm.getId() + indent + indent + hostId
                     + indent + indent + datacenter.getId());
+        }
+        for (int id = 0; id < requestedCount; id++) {
+            if (!placedIds.contains(id)) {
+                Log.printLine(indent + id + indent + indent + "NON PLACEE"
+                        + indent + indent + datacenter.getId());
+            }
         }
     }
 
